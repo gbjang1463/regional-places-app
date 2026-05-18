@@ -23,9 +23,9 @@
 
 ## 🚀 실행 방법
 
-`app.html` 파일을 더블클릭하거나 브라우저로 열기만 하면 됩니다.
+`index.html` 파일을 더블클릭하거나 브라우저로 열기만 하면 됩니다.
 
-또는 GitHub Pages로 호스팅된 버전을 사용하세요.
+또는 GitHub Pages 호스팅 버전: <https://gbjang1463.github.io/regional-places-app/>
 
 ## 🛠️ 기술 스택
 
