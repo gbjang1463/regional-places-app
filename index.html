@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>지역별 장소 + 팀에이전트</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   :root {
     --bg: #f5f7fb;
@@ -197,6 +198,108 @@
     font-size: 12px;
     border-top: 1px solid var(--line);
   }
+
+  /* Auth */
+  .auth-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  #g-signin { min-height: 40px; }
+  .user-chip {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 5px 12px 5px 5px;
+  }
+  .user-chip img {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+  .user-chip .uname { font-size: 13px; font-weight: 600; }
+  .user-chip .uemail { font-size: 11px; color: var(--muted); }
+  .logout-btn {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .logout-btn:hover { color: var(--text); border-color: var(--accent); }
+
+  .setup-notice {
+    display: none;
+    background: rgba(234,138,30,0.1);
+    border: 1px solid var(--warn);
+    color: var(--warn);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .modal-backdrop {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 24px;
+    max-width: 480px;
+    width: calc(100% - 40px);
+  }
+  .modal h3 { margin: 0 0 8px; }
+  .modal p { margin: 4px 0; font-size: 13px; color: var(--muted); }
+  .modal input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel-2);
+    color: var(--text);
+    font-size: 13px;
+    margin-top: 10px;
+    box-sizing: border-box;
+  }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+  .modal-actions button {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--panel-2);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .modal-actions button.primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .modal ol { font-size: 12px; color: var(--muted); padding-left: 18px; line-height: 1.7; }
+  .modal code { background: var(--panel-2); padding: 1px 6px; border-radius: 4px; font-size: 11px; }
+
+  .greeting {
+    background: linear-gradient(135deg, rgba(66,99,235,0.08), rgba(139,92,246,0.08));
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    display: none;
+  }
 </style>
 </head>
 <body>
@@ -206,8 +309,44 @@
     <h1>📍 지역별 장소 앱 <span class="badge">팀에이전트</span></h1>
     <div class="sub">메모.xlsx 데이터 · 3명의 AI 팀에이전트가 추천을 도와드립니다</div>
   </div>
-  <div class="sub" id="stats">로딩중...</div>
+  <div class="auth-area">
+    <div id="stats" class="sub">로딩중...</div>
+    <div class="setup-notice" id="setupNotice" title="클릭해서 Google Client ID 설정">⚙️ 구글 로그인 설정 필요</div>
+    <div id="g-signin"></div>
+    <div class="user-chip" id="userChip">
+      <img id="userPic" src="" alt="" />
+      <div>
+        <div class="uname" id="userName"></div>
+        <div class="uemail" id="userEmail"></div>
+      </div>
+      <button class="logout-btn" id="logoutBtn">로그아웃</button>
+    </div>
+  </div>
 </header>
+
+<!-- Google Client ID 설정 모달 -->
+<div class="modal-backdrop" id="setupModal">
+  <div class="modal">
+    <h3>🔐 Google OAuth Client ID 설정</h3>
+    <p>구글 로그인을 사용하려면 Google Cloud Console에서 발급받은 Client ID가 필요합니다.</p>
+    <ol>
+      <li><a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console</a>에서 프로젝트 생성</li>
+      <li>OAuth 동의 화면 구성 (외부, 앱 이름·이메일만 입력해도 OK)</li>
+      <li><code>사용자 인증 정보 → 사용자 인증 정보 만들기 → OAuth 클라이언트 ID</code></li>
+      <li>애플리케이션 유형: <code>웹 애플리케이션</code></li>
+      <li>승인된 JavaScript 출처:
+        <code>https://gbjang1463.github.io</code>,
+        <code>http://localhost</code>
+      </li>
+      <li>발급된 <b>클라이언트 ID</b>를 아래에 붙여넣기 (.apps.googleusercontent.com 형식)</li>
+    </ol>
+    <input type="text" id="clientIdInput" placeholder="123456789-abc...apps.googleusercontent.com" />
+    <div class="modal-actions">
+      <button id="setupCancel">취소</button>
+      <button class="primary" id="setupSave">저장</button>
+    </div>
+  </div>
+</div>
 
 <main>
   <!-- 왼쪽: 장소 패널 -->
@@ -220,6 +359,7 @@
   <!-- 오른쪽: 팀에이전트 패널 -->
   <section class="card">
     <h2>팀 에이전트</h2>
+    <div class="greeting" id="greeting"></div>
     <div class="agent-tabs" id="agentTabs"></div>
     <div id="agentBody"></div>
   </section>
@@ -405,6 +545,115 @@ function renderAgentBody() {
 }
 
 render();
+
+// ===== Google 로그인 =====
+// Client ID는 코드에 하드코딩하거나 localStorage에서 로드합니다.
+// 기본값이 비어있으면 사용자가 모달에서 직접 입력합니다.
+const DEFAULT_CLIENT_ID = ''; // ← 발급 후 여기에 넣어두면 모두에게 적용됨
+
+function getClientId() {
+  return DEFAULT_CLIENT_ID || localStorage.getItem('google_client_id') || '';
+}
+
+function decodeJwt(token) {
+  try {
+    const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const decoded = decodeURIComponent(atob(payload).split('').map(c =>
+      '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+    return JSON.parse(decoded);
+  } catch (e) { return null; }
+}
+
+function handleCredentialResponse(response) {
+  const profile = decodeJwt(response.credential);
+  if (!profile) return;
+  localStorage.setItem('google_token', response.credential);
+  localStorage.setItem('google_user', JSON.stringify(profile));
+  applyAuthState();
+}
+
+function signOut() {
+  localStorage.removeItem('google_token');
+  localStorage.removeItem('google_user');
+  if (window.google?.accounts?.id) {
+    google.accounts.id.disableAutoSelect();
+  }
+  applyAuthState();
+}
+
+function applyAuthState() {
+  const clientId = getClientId();
+  const user = JSON.parse(localStorage.getItem('google_user') || 'null');
+  const setupNotice = document.getElementById('setupNotice');
+  const signinDiv = document.getElementById('g-signin');
+  const userChip = document.getElementById('userChip');
+  const greeting = document.getElementById('greeting');
+
+  if (!clientId) {
+    setupNotice.style.display = 'inline-block';
+    signinDiv.style.display = 'none';
+    userChip.style.display = 'none';
+    greeting.style.display = 'none';
+    return;
+  }
+  setupNotice.style.display = 'none';
+
+  if (user) {
+    signinDiv.style.display = 'none';
+    userChip.style.display = 'flex';
+    document.getElementById('userPic').src = user.picture || '';
+    document.getElementById('userName').textContent = user.name || '';
+    document.getElementById('userEmail').textContent = user.email || '';
+    greeting.style.display = 'block';
+    greeting.innerHTML = `👋 안녕하세요, <b>${user.name}</b>님! 오늘은 어느 지역을 둘러보실래요?`;
+  } else {
+    signinDiv.style.display = 'block';
+    userChip.style.display = 'none';
+    greeting.style.display = 'none';
+    initGoogleSignIn(clientId);
+  }
+}
+
+function initGoogleSignIn(clientId) {
+  if (!window.google?.accounts?.id) {
+    setTimeout(() => initGoogleSignIn(clientId), 200);
+    return;
+  }
+  google.accounts.id.initialize({
+    client_id: clientId,
+    callback: handleCredentialResponse,
+    auto_select: false,
+  });
+  const target = document.getElementById('g-signin');
+  target.innerHTML = '';
+  google.accounts.id.renderButton(target, {
+    theme: 'outline', size: 'large', text: 'signin_with', shape: 'pill',
+  });
+}
+
+// Setup modal wiring
+function openSetupModal() {
+  document.getElementById('clientIdInput').value = localStorage.getItem('google_client_id') || '';
+  document.getElementById('setupModal').style.display = 'flex';
+}
+function closeSetupModal() {
+  document.getElementById('setupModal').style.display = 'none';
+}
+document.getElementById('setupNotice').onclick = openSetupModal;
+document.getElementById('setupCancel').onclick = closeSetupModal;
+document.getElementById('setupSave').onclick = () => {
+  const v = document.getElementById('clientIdInput').value.trim();
+  if (!v.endsWith('.apps.googleusercontent.com')) {
+    alert('올바른 Google Client ID 형식이 아닙니다.\n(.apps.googleusercontent.com 으로 끝나야 합니다)');
+    return;
+  }
+  localStorage.setItem('google_client_id', v);
+  closeSetupModal();
+  applyAuthState();
+};
+document.getElementById('logoutBtn').onclick = signOut;
+
+applyAuthState();
 </script>
 </body>
 </html>
