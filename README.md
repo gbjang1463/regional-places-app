@@ -26,7 +26,14 @@
 
 `index.html` 파일을 더블클릭하거나 브라우저로 열기만 하면 됩니다.
 
-또는 GitHub Pages 호스팅 버전: <https://gbjang1463.github.io/regional-places-app/>
+배포된 버전:
+- GitHub Pages: <https://gbjang1463.github.io/regional-places-app/>
+- Cloud Run: 설정 후 자동 생성 (가이드: [CLOUD_DEPLOY_SETUP.md](CLOUD_DEPLOY_SETUP.md))
+
+## ☁️ Cloud Build / Cloud Run 자동 배포
+
+`main` 브랜치 푸시 시 Cloud Build가 Docker 이미지를 빌드해 Cloud Run에 자동 배포합니다.
+초기 설정 가이드는 [CLOUD_DEPLOY_SETUP.md](CLOUD_DEPLOY_SETUP.md)를 참고하세요.
 
 ## 🛠️ 기술 스택
 

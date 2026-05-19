@@ -1,0 +1,8 @@
+.git
+.gitignore
+*.bat
+*.xlsx
+*.md
+.dockerignore
+.gcloudignore
+cloudbuild.yaml

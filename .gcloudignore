@@ -1,0 +1,9 @@
+.git
+.gitignore
+*.bat
+*.xlsx
+README.md
+PRD.md
+GOOGLE_LOGIN_SETUP.md
+CLOUD_DEPLOY_SETUP.md
+.gcloudignore
